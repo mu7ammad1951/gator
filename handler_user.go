@@ -56,6 +56,19 @@ func handlerRegister(s *state, cmd command) error {
 	return nil
 }
 
+func handlerUsers(s *state, cmd command) error {
+
+	users, err := s.db.GetUsers(context.Background())
+	if err != nil {
+		return fmt.Errorf("error getting users from database: %v", err)
+	}
+
+	for _, user := range users {
+		fmt.Printf("* %s\n", user.Name)
+	}
+	return nil
+}
+
 func printUser(user database.User) {
 	fmt.Printf("ID:   %v", user.ID)
 	fmt.Printf("Name: %v", user.Name)
