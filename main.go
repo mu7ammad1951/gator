@@ -1,34 +1,46 @@
 package main
 
 import (
-	"fmt"
+	"database/sql"
+	"log"
 	"os"
 
+	_ "github.com/lib/pq"
 	"github.com/mu7ammad1951/gator/internal/config"
+	"github.com/mu7ammad1951/gator/internal/database"
 )
 
 type state struct {
 	cfg *config.Config
+	db  *database.Queries
 }
 
 func main() {
 	cfg, err := config.Read()
 	if err != nil {
-		fmt.Println(err)
-		return
+		log.Fatalf("error reading config: %v", err)
 	}
+
+	db, err := sql.Open("postgres", cfg.DbURL)
+	if err != nil {
+		log.Fatalf("error connecting to database: %v", err)
+	}
+	defer db.Close()
 
 	myState := state{
 		cfg: &cfg,
+		db:  database.New(db),
 	}
 
-	commands := commands{
+	cmds := commands{
 		handlers: make(map[string]func(s *state, cmd command) error),
 	}
-	commands.register("login", handlerLogin)
+	cmds.register("login", handlerLogin)
+	cmds.register("register", handlerRegister)
+	cmds.register("reset", handlerReset)
+
 	if len(os.Args) < 2 {
-		fmt.Println("Error: not enough arguments provided")
-		os.Exit(1)
+		log.Fatal("Error: not enough arguments provided")
 	}
 
 	name := os.Args[1]  // The command name
@@ -39,10 +51,9 @@ func main() {
 		args: args,
 	}
 
-	err = commands.run(&myState, myCommand)
+	err = cmds.run(&myState, myCommand)
 	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+		log.Fatal(err)
 	}
 
 }
