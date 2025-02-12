@@ -39,6 +39,7 @@ func main() {
 	cmds.register("register", handlerRegister)
 	cmds.register("reset", handlerReset)
 	cmds.register("users", handlerUsers)
+	cmds.register("agg", handleAgg)
 
 	if len(os.Args) < 2 {
 		log.Fatal("Error: not enough arguments provided")
@@ -54,7 +55,7 @@ func main() {
 
 	err = cmds.run(&myState, myCommand)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("ERROR: ", err)
 	}
 
 }
