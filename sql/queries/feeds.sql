@@ -1,8 +1,9 @@
--- name: GetFeeds: many
+-- name: GetFeeds :many
 SELECT * FROM feeds;
 
--- name: AddFeed: one
-INSERT INTO feeds(
+-- name: AddFeed :one
+INSERT INTO feeds(id, created_at, updated_at, name, url, user_id)
+VALUES (
     $1,
     $2,
     $3,

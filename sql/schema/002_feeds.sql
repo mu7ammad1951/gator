@@ -8,5 +8,5 @@ CREATE TABLE feeds (
     user_id UUID NOT NULL REFERENCES users (id) ON DELETE CASCADE
 );
 
--- -goose DOWN
+-- +goose Down
 DROP TABLE feeds;

@@ -3,9 +3,13 @@ package main
 import (
 	"context"
 	"fmt"
+	"time"
+
+	"github.com/google/uuid"
+	"github.com/mu7ammad1951/gator/internal/database"
 )
 
-func handleAgg(s *state, cmd command) error {
+func handlerAgg(s *state, cmd command) error {
 	rssFeed, err := fetchFeed(context.Background(), "https://www.wagslane.dev/index.xml")
 	if err != nil {
 		return fmt.Errorf("failed to fetch feed: %w", err)
@@ -14,4 +18,37 @@ func handleAgg(s *state, cmd command) error {
 	fmt.Println(*rssFeed)
 
 	return nil
+}
+
+func handlerAddFeed(s *state, cmd command) error {
+	if len(cmd.args) < 2 {
+		return fmt.Errorf("missing argument - USAGE> addFeed <name> <url>")
+	}
+
+	currentUser, err := s.db.GetUser(context.Background(), s.cfg.CurrentUserName)
+	if err != nil {
+		return err
+	}
+
+	params := database.AddFeedParams{
+		ID:        uuid.New(),
+		CreatedAt: time.Now().UTC(),
+		UpdatedAt: time.Now().UTC(),
+		Name:      cmd.args[0],
+		Url:       cmd.args[1],
+		UserID:    currentUser.ID,
+	}
+
+	feed, err := s.db.AddFeed(context.Background(), params)
+	if err != nil {
+		return err
+	}
+
+	fmt.Printf("%v\n", feed)
+
+	return nil
+}
+
+func handlerFeeds(s *state, cmd command) error {
+
 }
