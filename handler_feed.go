@@ -46,9 +46,27 @@ func handlerAddFeed(s *state, cmd command) error {
 
 	fmt.Printf("%v\n", feed)
 
+	if err = handlerFeedFollow(s, command{
+		name: "follow",
+		args: []string{cmd.args[1]},
+	}); err != nil {
+		return err
+	}
+
 	return nil
 }
 
 func handlerFeeds(s *state, cmd command) error {
-
+	rssFeeds, err := s.db.GetFeeds(context.Background())
+	if err != nil {
+		return err
+	}
+	for _, feed := range rssFeeds {
+		user, err := s.db.GetUserByID(context.Background(), feed.UserID)
+		if err != nil {
+			return err
+		}
+		fmt.Printf("Feed: %v\nURL: %v\nAdded By: %v\n\n", feed.Name, feed.Url, user.Name)
+	}
+	return nil
 }
