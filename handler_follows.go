@@ -17,7 +17,7 @@ func handlerFeedFollow(s *state, cmd command, user database.User) error {
 
 	feed, err := s.db.GetFeedByUrl(context.Background(), url)
 	if err != nil {
-		return fmt.Errorf("feed does not exist - %w, add using 'addfeed <url>'", err)
+		return fmt.Errorf("feed does not exist - %w, add using 'addfeed <name> <url>'", err)
 	}
 
 	params := database.CreateFeedFollowParams{
