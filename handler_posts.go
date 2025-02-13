@@ -39,6 +39,6 @@ func printPost(post database.Post) {
 	fmt.Println()
 	fmt.Printf("%v\n", html.UnescapeString(post.Title))
 	fmt.Printf("Published on: %v\n", post.PublishedAt.Format("2006-01-02"))
-	fmt.Printf("Decription:\n%v\n", html.UnescapeString(post.Description.String))
+	fmt.Printf("Description:\n%v\n", html.UnescapeString(post.Description.String))
 	fmt.Println()
 }
