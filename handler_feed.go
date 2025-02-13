@@ -20,14 +20,9 @@ func handlerAgg(s *state, cmd command) error {
 	return nil
 }
 
-func handlerAddFeed(s *state, cmd command) error {
+func handlerAddFeed(s *state, cmd command, user database.User) error {
 	if len(cmd.args) < 2 {
-		return fmt.Errorf("missing argument - USAGE> addFeed <name> <url>")
-	}
-
-	currentUser, err := s.db.GetUser(context.Background(), s.cfg.CurrentUserName)
-	if err != nil {
-		return err
+		return fmt.Errorf("missing arguments - USAGE: addFeed <name> <url>")
 	}
 
 	params := database.AddFeedParams{
@@ -36,7 +31,7 @@ func handlerAddFeed(s *state, cmd command) error {
 		UpdatedAt: time.Now().UTC(),
 		Name:      cmd.args[0],
 		Url:       cmd.args[1],
-		UserID:    currentUser.ID,
+		UserID:    user.ID,
 	}
 
 	feed, err := s.db.AddFeed(context.Background(), params)
@@ -44,14 +39,20 @@ func handlerAddFeed(s *state, cmd command) error {
 		return err
 	}
 
-	fmt.Printf("%v\n", feed)
+	dataRow, err := s.db.CreateFeedFollow(context.Background(), database.CreateFeedFollowParams{
+		ID:        uuid.New(),
+		CreatedAt: time.Now().UTC(),
+		UpdatedAt: time.Now().UTC(),
+		UserID:    user.ID,
+		FeedID:    feed.ID,
+	})
 
-	if err = handlerFeedFollow(s, command{
-		name: "follow",
-		args: []string{cmd.args[1]},
-	}); err != nil {
-		return err
+	if err != nil {
+		return fmt.Errorf("couldn't follow feed: %w", err)
 	}
+
+	fmt.Println("successfully following!")
+	fmt.Printf("User: %v\nFeed: %v", dataRow.UserName, dataRow.FeedName)
 
 	return nil
 }

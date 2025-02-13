@@ -11,8 +11,8 @@ import (
 )
 
 func handlerLogin(s *state, cmd command) error {
-	if len(cmd.args) == 0 {
-		return fmt.Errorf("the login handler expects a single argument, the username")
+	if len(cmd.args) < 1 {
+		return fmt.Errorf("missing arguments - USAGE: login <name>")
 	}
 
 	user, err := s.db.GetUser(context.Background(), cmd.args[0])
@@ -30,8 +30,8 @@ func handlerLogin(s *state, cmd command) error {
 }
 
 func handlerRegister(s *state, cmd command) error {
-	if len(cmd.args) == 0 {
-		return fmt.Errorf("the login handler expects a single argument, the name")
+	if len(cmd.args) < 1 {
+		return fmt.Errorf("missing arguments - USAGE: register <name>")
 	}
 
 	params := database.CreateUserParams{
@@ -74,6 +74,6 @@ func handlerUsers(s *state, cmd command) error {
 }
 
 func printUser(user database.User) {
-	fmt.Printf("ID:   %v", user.ID)
-	fmt.Printf("Name: %v", user.Name)
+	fmt.Printf("ID:   %v\n", user.ID)
+	fmt.Printf("Name: %v\n", user.Name)
 }

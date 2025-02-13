@@ -1,5 +1,6 @@
 -- name: GetFeeds :many
 SELECT * FROM feeds;
+--
 
 -- name: AddFeed :one
 INSERT INTO feeds(id, created_at, updated_at, name, url, user_id)
@@ -11,6 +12,8 @@ VALUES (
     $5,
     $6
 ) RETURNING *;
+--
 
 -- name: GetFeedByUrl :one
 SELECT * FROM feeds WHERE feeds.url = $1;
+--

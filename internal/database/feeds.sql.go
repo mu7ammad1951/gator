@@ -13,6 +13,7 @@ import (
 )
 
 const addFeed = `-- name: AddFeed :one
+
 INSERT INTO feeds(id, created_at, updated_at, name, url, user_id)
 VALUES (
     $1,
@@ -55,6 +56,7 @@ func (q *Queries) AddFeed(ctx context.Context, arg AddFeedParams) (Feed, error) 
 }
 
 const getFeedByUrl = `-- name: GetFeedByUrl :one
+
 SELECT id, created_at, updated_at, name, url, user_id FROM feeds WHERE feeds.url = $1
 `
 
