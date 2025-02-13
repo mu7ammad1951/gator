@@ -10,13 +10,24 @@ import (
 )
 
 func handlerAgg(s *state, cmd command) error {
-	rssFeed, err := fetchFeed(context.Background(), "https://www.wagslane.dev/index.xml")
-	if err != nil {
-		return fmt.Errorf("failed to fetch feed: %w", err)
+	if len(cmd.args) < 1 {
+		return fmt.Errorf("missing argument - USAGE: agg <duration-string>")
 	}
 
-	fmt.Println(*rssFeed)
+	duration, err := time.ParseDuration(cmd.args[0])
+	if err != nil {
+		return fmt.Errorf("invalid <duration-string> : use <X>s or <X>m or <X>h\n<X> is an integer")
+	}
 
+	fmt.Printf("Collecting feeds every %v", duration.String())
+	ticker := time.NewTicker(duration)
+	defer ticker.Stop()
+	for ; ; <-ticker.C {
+		err = scrapeFeeds(s)
+		if err != nil {
+			return fmt.Errorf("error scraping feeds: %w", err)
+		}
+	}
 	return nil
 }
 

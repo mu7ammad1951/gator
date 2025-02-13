@@ -17,3 +17,17 @@ VALUES (
 -- name: GetFeedByUrl :one
 SELECT * FROM feeds WHERE feeds.url = $1;
 --
+
+-- name: MarkFeedFetched :one
+UPDATE feeds 
+    SET last_fetched_at = $1, 
+        updated_at = $1 
+WHERE id = $2 
+RETURNING *;
+--
+
+-- name: GetNextFeedToFetch :one
+SELECT id, url FROM feeds
+ORDER BY last_fetched_at ASC NULLS FIRST, id ASC
+LIMIT 1;
+--

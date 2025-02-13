@@ -2,10 +2,15 @@ package main
 
 import (
 	"context"
+	"database/sql"
 	"encoding/xml"
+	"fmt"
 	"html"
 	"io"
 	"net/http"
+	"time"
+
+	"github.com/mu7ammad1951/gator/internal/database"
 )
 
 type RSSFeed struct {
@@ -22,6 +27,36 @@ type RSSItem struct {
 	Link        string `xml:"link"`
 	Description string `xml:"description"`
 	PubDate     string `xml:"pubDate"`
+}
+
+func scrapeFeeds(s *state) error {
+	nextFeed, err := s.db.GetNextFeedToFetch(context.Background())
+	if err != nil {
+		return fmt.Errorf("error fetching feed: %w", err)
+	}
+
+	params := database.MarkFeedFetchedParams{
+		LastFetchedAt: sql.NullTime{Time: time.Now().UTC(), Valid: true},
+		ID:            nextFeed.ID,
+	}
+	_, err = s.db.MarkFeedFetched(context.Background(), params)
+	if err != nil {
+		return fmt.Errorf("error updating last_fetched_at: %w", err)
+	}
+
+	feed, err := fetchFeed(context.Background(), nextFeed.Url)
+	if err != nil {
+		return fmt.Errorf("error fetching feed by url: %w", err)
+	}
+	fmt.Println()
+	fmt.Printf("Feed => %v\n", feed.Channel.Title)
+
+	for i, item := range feed.Channel.Item {
+		fmt.Printf("%v. %v\n", i+1, item.Title)
+	}
+	fmt.Println()
+
+	return nil
 }
 
 func fetchFeed(ctx context.Context, feedURL string) (*RSSFeed, error) {
