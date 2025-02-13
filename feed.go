@@ -10,6 +10,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/google/uuid"
+	"github.com/lib/pq"
 	"github.com/mu7ammad1951/gator/internal/database"
 )
 
@@ -51,8 +53,31 @@ func scrapeFeeds(s *state) error {
 	fmt.Println()
 	fmt.Printf("Feed => %v\n", feed.Channel.Title)
 
-	for i, item := range feed.Channel.Item {
-		fmt.Printf("%v. %v\n", i+1, item.Title)
+	for _, item := range feed.Channel.Item {
+		now := time.Now().UTC()
+		pubDate, err := parseDate(item.PubDate)
+		if err != nil {
+			fmt.Printf("error parsing the date, using 'now': %v\n", err)
+			pubDate = now
+		}
+
+		_, err = s.db.CreatePost(context.Background(), database.CreatePostParams{
+			ID:          uuid.New(),
+			CreatedAt:   now,
+			UpdatedAt:   now,
+			Title:       item.Title,
+			Url:         item.Link,
+			Description: sql.NullString{String: item.Description, Valid: item.Description != ""},
+			PublishedAt: pubDate,
+			FeedID:      nextFeed.ID,
+		})
+		if err != nil {
+			if pqErr, ok := err.(*pq.Error); ok {
+				if pqErr.Code != "23505" {
+					return fmt.Errorf("error creating post %s from %s: %w", item.Title, feed.Channel.Title, err)
+				}
+			}
+		}
 	}
 	fmt.Println()
 
@@ -103,4 +128,22 @@ func unescapeRSSFeed(rssFeed *RSSFeed) {
 		rssFeed.Channel.Item[i].Description = html.UnescapeString(rssItem.Description)
 	}
 
+}
+
+func parseDate(dateStr string) (time.Time, error) {
+	formats := []string{
+		time.RFC3339,
+		time.RFC1123Z,
+		time.RFC1123,
+		"Mon, 02 Jan 2006 15:04:05 -0700",
+		// Add more formats as needed
+	}
+
+	for _, format := range formats {
+		if t, err := time.Parse(format, dateStr); err == nil {
+			return t, nil
+		}
+	}
+
+	return time.Time{}, fmt.Errorf("could not parse date: %s", dateStr)
 }
